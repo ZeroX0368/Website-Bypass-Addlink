@@ -1,0 +1,306 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link Bypass Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .input-group {
+            margin: 20px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="url"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .url-display {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 10px 0;
+            word-break: break-all;
+            border-left: 4px solid #007bff;
+        }
+        .copy-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px 5px 5px 0;
+        }
+        .copy-btn:hover {
+            background-color: #218838;
+        }
+        .visit-btn {
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        .visit-btn:hover {
+            background-color: #138496;
+            text-decoration: none;
+            color: white;
+        }
+        .url-section {
+            margin: 15px 0;
+        }
+        .url-label {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        .loading {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 14px;
+            border-top: 1px solid #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Link Bypass Tool</h1>
+        <form id="bypassForm">
+            <div class="input-group">
+                <label for="url">Enter URL to bypass:</label>
+                <input type="url" id="url" name="url" placeholder="https://example.com/link" required>
+            </div>
+            <button type="submit" id="bypassBtn">Bypass Link</button>
+        </form>
+        
+        <div class="loading" id="loading" style="display: none;">
+            <p>Processing... Please wait.</p>
+        </div>
+        
+        <div class="result" id="result"></div>
+    </div>
+    
+    <div class="footer">
+        Made by bucu0368
+    </div>
+
+    <script>
+        document.getElementById('bypassForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const url = document.getElementById('url').value;
+            const bypassBtn = document.getElementById('bypassBtn');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            
+            // Reset and show loading
+            result.style.display = 'none';
+            loading.style.display = 'block';
+            bypassBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/bypass', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.className = 'result success';
+                    
+                    // Escape HTML để tránh XSS và syntax error
+                    const escapeHtml = (text) => {
+                        const div = document.createElement('div');
+                        div.textContent = text;
+                        return div.innerHTML;
+                    };
+                    
+                    const escapedUrl = escapeHtml(url);
+                    const escapedResult = escapeHtml(data.result);
+                    
+                    result.innerHTML = `
+                        <h3>✅ Bypass Thành Công!</h3>
+                        
+                        <div class="url-section">
+                            <div class="url-label">🔗 URL Gốc:</div>
+                            <div class="url-display">${escapedUrl}</div>
+                        </div>
+                        
+                        <div class="url-section">
+                            <div class="url-label">🌐 Bypass result:</div>
+                            <div class="url-display" id="bypassedUrl">${escapedResult}</div>
+                            <button class="copy-btn" onclick="copyBypassedUrl()">📋 Copy Link</button>
+                            <a href="${data.result}" target="_blank" class="visit-btn">🌐 Mở Link</a>
+                        </div>
+                    `;
+                    
+                    // Lưu kết quả để copy
+                    window.bypassedResult = data.result;
+                } else {
+                    result.className = 'result error';
+                    result.innerHTML = `
+                        <h3>Error</h3>
+                        <p>${data.error}</p>
+                    `;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.innerHTML = `
+                    <h3>Error</h3>
+                    <p>Failed to connect to the bypass service: ${error.message}</p>
+                `;
+            } finally {
+                loading.style.display = 'none';
+                result.style.display = 'block';
+                bypassBtn.disabled = false;
+            }
+        });
+        
+        function copyBypassedUrl() {
+            const text = window.bypassedResult;
+            if (!text) {
+                alert('Không có link để copy!');
+                return;
+            }
+            
+            const copyBtn = event.target;
+            const originalText = copyBtn.innerHTML;
+            
+            // Check if clipboard API is available
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(function() {
+                    showCopySuccess(copyBtn, originalText);
+                }).catch(function(err) {
+                    console.error('Clipboard API failed: ', err);
+                    fallbackCopy(text, copyBtn, originalText);
+                });
+            } else {
+                // Use fallback method
+                fallbackCopy(text, copyBtn, originalText);
+            }
+        }
+        
+        function showCopySuccess(copyBtn, originalText) {
+            copyBtn.innerHTML = '✅ Đã Copy!';
+            copyBtn.style.backgroundColor = '#20c997';
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+                copyBtn.style.backgroundColor = '#28a745';
+            }, 2000);
+        }
+        
+        function fallbackCopy(text, copyBtn, originalText) {
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-9999px';
+                textArea.style.top = '-9999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                if (successful) {
+                    showCopySuccess(copyBtn, originalText);
+                } else {
+                    throw new Error('execCommand failed');
+                }
+            } catch (err) {
+                console.error('Fallback copy failed: ', err);
+                // Show the text in a prompt as last resort
+                prompt('Copy this link manually:', text);
+            }
+        }
+        
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                alert('Đã copy thành công!');
+            }).catch(function(err) {
+                console.error('Không thể copy: ', err);
+                alert('Không thể copy link. Vui lòng copy thủ công.');
+            });
+        }
+    </script>
+</body>
+</html>
